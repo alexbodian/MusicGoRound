@@ -54,7 +54,7 @@ async def pullMetadata(base_page):
                 {
                     'title': await title_elems[x].inner_text(),
                     'price': await price_elems[x].inner_text(),
-                    'url': await link_elems[x].get_attribute('href')
+                    'url': base_url + await link_elems[x].get_attribute('href')
 
 
 
@@ -80,7 +80,7 @@ async def run_async_functions():
     # totalPages = await tasks[0]
     # print(totalPages)
 
-    task = await pullMetadata(electric_guitars_page1)
+    task = asyncio.create_task(pullMetadata(electric_guitars_page1))
     tasks.append(task)
     await asyncio.gather(*tasks)
     res = await tasks[0]
