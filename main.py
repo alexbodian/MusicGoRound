@@ -1,8 +1,12 @@
+import unidecode
+import json
 import asyncio
+from tqdm import tqdm
 from playwright.async_api import async_playwright
 
 base_url = 'https://www.musicgoround.com/'
 electric_guitars_page1 = "https://www.musicgoround.com/products/GUEL/electric-guitars?sortBy=xp.Price&page=1"
+electric_guitars_pages = "https://www.musicgoround.com/products/GUEL/electric-guitars?sortBy=xp.Price&page="
 
 
 async def getNumberOfPages(base_page):
@@ -64,8 +68,55 @@ async def pullMetadata(base_page):
             )
 
         await browser.close()
+        
         return list_of_items
 
+
+async def run(category_page):
+    tasks = []
+    # print(story_details_json[0]['ID'])
+
+    # task = asyncio.create_task(getNumberOfPages(electric_guitars_page1))
+    # tasks.append(task)
+    # await asyncio.gather(*tasks)
+
+    # totalPages = await tasks[0]
+    # print(totalPages)
+
+    task = asyncio.create_task(getNumberOfPages(category_page))
+    tasks.append(task)
+    await asyncio.gather(*tasks)
+    total_number_of_pages = await tasks[0]
+    total_number_of_pages = int(total_number_of_pages)
+    print(total_number_of_pages)
+    tasks.clear()
+    # progress_bar = tqdm(total=total_number_of_pages, unit='Page')
+
+    count = 0
+    total_number_of_pages+=1
+    for i in range(1, total_number_of_pages):
+        elem = str(i)
+        task = asyncio.create_task(pullMetadata(electric_guitars_pages+elem))
+        tasks.append(task)
+
+        if count == 10:
+            await asyncio.gather(*tasks)
+            count = 0
+            break
+            print(i)
+        else:
+            count+=1
+    
+    await asyncio.gather(*tasks)
+
+    results = []
+
+    for task in tasks:
+        result = await task
+        results.append(result)
+    
+    with open('guitars.json', 'w') as file:
+        json.dump(results, file)
 
 async def run_async_functions():
 
@@ -138,4 +189,4 @@ async def run_async_functions():
 
     '''
 
-asyncio.run(run_async_functions())
+asyncio.run(run(electric_guitars_page1))
